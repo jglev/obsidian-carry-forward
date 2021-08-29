@@ -16,7 +16,7 @@ interface CarryForwardPluginSettings {
 }
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
-  linkText: "(see here)",
+  linkText: "",
   lineFormatFrom: "",
   lineFormatTo: "",
 };
@@ -52,6 +52,15 @@ const copyForwardLines = (
     return true;
   }
 
+  const regexValidation = validateRegex(settings.lineFormatFrom);
+  if (regexValidation.valid !== true) {
+    new Notice(
+      `Error: 'From' setting is invalid:\n\n${regexValidation.string}\n\nPlease update the Carry-Forward settings and try again.`,
+      1000 * 30 // 30 seconds
+    );
+    return;
+  }
+
   const cursorFrom = editor.getCursor("from");
   const cursorTo = editor.getCursor("to");
   const minLine = cursorFrom.line;
@@ -70,25 +79,33 @@ const copyForwardLines = (
     let line = editor.getLine(lineNumber);
     let copiedLine = editor.getLine(lineNumber);
 
+    if (copiedLine.match(/^\s*$/)) {
+      copiedLines.push(copiedLine);
+      updatedLines.push(line);
+      continue;
+    }
+
     if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
       // Does the line already have a block ID?
       const blockID = line.match(blockIDRegex);
       let link = "";
-      console.log(71, blockID);
       if (blockID === null) {
         // There is NOT an existing line ID:
-        newID = `#TEST^${genID()}`;
+        newID = `^${genID()}`;
         link = view.app.fileManager.generateMarkdownLink(
           file,
           "/",
-          `${newID}`,
+          `#${newID}`,
           settings.linkText
         );
         line = line.replace(/ ?$/, ` ${newID}`);
         if (copy === CopyTypes.LinkOnly) {
           copiedLine = link;
         } else {
-          copiedLine = copiedLine.replace(/ ?$/, link);
+          copiedLine = copiedLine.replace(
+            new RegExp(settings.lineFormatFrom, "u"),
+            settings.lineFormatTo.replace("{{LINK}}", link)
+          );
         }
       } else {
         // There IS an existing line ID:
@@ -101,17 +118,22 @@ const copyForwardLines = (
         if (copy === CopyTypes.LinkOnly) {
           copiedLine = link;
         } else {
-          copiedLine = copiedLine.replace(blockIDRegex, ` ${link}`);
+          copiedLine = copiedLine
+            .replace(blockIDRegex, "")
+            .replace(
+              new RegExp(settings.lineFormatFrom, "u"),
+              settings.lineFormatTo.replace("{{LINK}}", link)
+            );
         }
       }
-      copiedLines.push(copiedLine);
     }
 
+    copiedLines.push(copiedLine);
     updatedLines.push(line);
   }
 
   navigator.clipboard.writeText(copiedLines.join("\n")).then(() => {
-    new Notice("Copied!");
+    new Notice("Copied");
   });
 
   transaction.changes?.push({
@@ -129,12 +151,6 @@ export default class CarryForwardPlugin extends Plugin {
     console.log("loading carry-forward-line plugin");
 
     await this.loadSettings();
-
-    this.addRibbonIcon("dice", "CarryForward Plugin", () => {
-      new Notice("This is a notice!");
-    });
-
-    this.addStatusBarItem().setText("Status Bar Text");
 
     this.addCommand({
       id: "carry-line-forward-separate-lines",
@@ -197,6 +213,28 @@ export default class CarryForwardPlugin extends Plugin {
   }
 }
 
+const validateRegex = (
+  regexString: string
+): { valid: boolean | null; string: string } => {
+  let updatedRegexString = regexString
+    // Because the plugin's settings are stored in JSON, characters like
+    // \n get double-escaped, and then do not get replaced automatically
+    // on use. This was causing To strings not to parse \n, etc.
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\r/g, "\r");
+
+  try {
+    new RegExp(updatedRegexString, "u");
+    return { valid: true, string: updatedRegexString };
+  } catch (e) {
+    return {
+      valid: false,
+      string: `"${updatedRegexString}": "${e}"`,
+    };
+  }
+};
+
 class CarryForwardSettingTab extends PluginSettingTab {
   plugin: CarryForwardPlugin;
 
@@ -217,45 +255,55 @@ class CarryForwardSettingTab extends PluginSettingTab {
       .setDesc(
         "Display text of copied links. Leaving this blank will display the text of the actual link."
       )
-      .addText((text) =>
-        text
-          .setPlaceholder("")
-          .setValue(DEFAULT_SETTINGS.linkText)
-          .onChange(async (value) => {
-            // if (value === "") {
-            //   this.plugin.settings.linkText = DEFAULT_SETTINGS.linkText;
-            // } else {
-            this.plugin.settings.linkText = value;
-            // }
-            await this.plugin.saveSettings();
-          })
-      );
+      .addText((text) => {
+        const settings = this.plugin.settings;
+        text.setValue(settings.linkText).onChange(async (value) => {
+          settings.linkText = value;
+          await this.plugin.saveSettings();
+        });
+      });
 
-    new Setting(containerEl)
-      .setName("Remove from line")
+    const fromToEl = containerEl.createEl("div");
+    fromToEl.addClass("from-to-rule");
+
+    if (validateRegex(this.plugin.settings.lineFormatFrom).valid !== true) {
+      fromToEl.addClass("invalid");
+    }
+
+    new Setting(fromToEl)
+      .setName("Transform Line")
       .setDesc(
-        "A Regular Expression for any parts of a copied line to remove before adding a link."
+        "When copying a line, replace the first match of a Regular Expression with text. Use {{LINK}} in the To field to place a link."
       )
       .addText((text) =>
         text
-          .setPlaceholder("")
-          .setValue("")
+          .setPlaceholder("From (Default: $ / End of line)")
+          .setValue(this.plugin.settings.lineFormatFrom)
           .onChange(async (value) => {
-            this.plugin.settings.linkText = value;
+            if (value === "") {
+              this.plugin.settings.lineFormatFrom =
+                DEFAULT_SETTINGS.lineFormatFrom;
+            } else {
+              if (validateRegex(value).valid !== true) {
+                fromToEl.addClass("invalid");
+              } else {
+                fromToEl.removeClass("invalid");
+              }
+              this.plugin.settings.lineFormatFrom = value;
+            }
             await this.plugin.saveSettings();
           })
-      );
-
-    new Setting(containerEl)
-      .setName("Copied text")
-      .setDesc("Display text of copied links. Use.")
+      )
       .addText((text) =>
         text
-          .setPlaceholder("")
-          .setValue("")
+          .setPlaceholder("To (Default: {{LINK}})")
+          .setValue(this.plugin.settings.lineFormatTo)
           .onChange(async (value) => {
-            console.log("Secret: " + value);
-            this.plugin.settings.linkText = value;
+            if (value === "") {
+              this.plugin.settings.lineFormatTo = DEFAULT_SETTINGS.lineFormatTo;
+            } else {
+              this.plugin.settings.lineFormatTo = value;
+            }
             await this.plugin.saveSettings();
           })
       );
