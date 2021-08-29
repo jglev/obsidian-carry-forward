@@ -2,21 +2,23 @@ import {
   App,
   Editor,
   EditorTransaction,
-  Modal,
   Notice,
   Plugin,
   PluginSettingTab,
   Setting,
   View,
-  parseLinktext,
 } from "obsidian";
 
 interface CarryForwardPluginSettings {
-  mySetting: string;
+  linkText: string;
+  lineFormatFrom: string;
+  lineFormatTo: string;
 }
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
-  mySetting: "default",
+  linkText: "(see here)",
+  lineFormatFrom: "",
+  lineFormatTo: "",
 };
 
 const genID = (length = 5) => {
@@ -34,13 +36,14 @@ enum CopyTypes {
   LinkOnly, // 2
 }
 
-const blockIDRegex = /[\s^]\^[a-zA-Z0-9-]+$/u;
+const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
 
 const copyForwardLines = (
   checking: boolean,
   editor: Editor,
   view: View,
   app: App,
+  settings: CarryForwardPluginSettings,
   copy: CopyTypes = CopyTypes.SeparateLines
 ) => {
   if (checking) {
@@ -74,29 +77,37 @@ const copyForwardLines = (
       console.log(71, blockID);
       if (blockID === null) {
         // There is NOT an existing line ID:
-        newID = `^${genID()}`;
+        newID = `#TEST^${genID()}`;
         link = view.app.fileManager.generateMarkdownLink(
           file,
           "/",
           `${newID}`,
-          "(see here)"
+          settings.linkText
         );
         line = line.replace(/ ?$/, ` ${newID}`);
-        copiedLine = copiedLine.replace(/ ?$/, link);
+        if (copy === CopyTypes.LinkOnly) {
+          copiedLine = link;
+        } else {
+          copiedLine = copiedLine.replace(/ ?$/, link);
+        }
       } else {
         // There IS an existing line ID:
         link = view.app.fileManager.generateMarkdownLink(
           file,
           "/",
-          `${blockID}`,
-          "(see here)"
+          `#${blockID}`,
+          settings.linkText
         );
-        copiedLine = copiedLine.replace(blockIDRegex, ` ${link}`);
+        if (copy === CopyTypes.LinkOnly) {
+          copiedLine = link;
+        } else {
+          copiedLine = copiedLine.replace(blockIDRegex, ` ${link}`);
+        }
       }
+      copiedLines.push(copiedLine);
     }
 
     updatedLines.push(line);
-    copiedLines.push(copiedLine);
   }
 
   navigator.clipboard.writeText(copiedLines.join("\n")).then(() => {
@@ -119,7 +130,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     await this.loadSettings();
 
-    this.addRibbonIcon("dice", "Sample Plugin", () => {
+    this.addRibbonIcon("dice", "CarryForward Plugin", () => {
       new Notice("This is a notice!");
     });
 
@@ -134,6 +145,7 @@ export default class CarryForwardPlugin extends Plugin {
           editor,
           view,
           this.app,
+          this.settings,
           CopyTypes.SeparateLines
         );
       },
@@ -148,6 +160,7 @@ export default class CarryForwardPlugin extends Plugin {
           editor,
           view,
           this.app,
+          this.settings,
           CopyTypes.CombinedLines
         );
       },
@@ -162,20 +175,13 @@ export default class CarryForwardPlugin extends Plugin {
           editor,
           view,
           this.app,
+          this.settings,
           CopyTypes.LinkOnly
         );
       },
     });
 
-    this.addCommand({
-      id: "carry-line-forward-paste",
-      name: "Paste",
-      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
-        return paste(checking, editor, view, this.app);
-      },
-    });
-
-    this.addSettingTab(new SampleSettingTab(this.app, this));
+    this.addSettingTab(new CarryForwardSettingTab(this.app, this));
   }
 
   onunload() {
@@ -191,23 +197,7 @@ export default class CarryForwardPlugin extends Plugin {
   }
 }
 
-class SampleModal extends Modal {
-  constructor(app: App) {
-    super(app);
-  }
-
-  onOpen() {
-    let { contentEl } = this;
-    contentEl.setText("Woah!");
-  }
-
-  onClose() {
-    let { contentEl } = this;
-    contentEl.empty();
-  }
-}
-
-class SampleSettingTab extends PluginSettingTab {
+class CarryForwardSettingTab extends PluginSettingTab {
   plugin: CarryForwardPlugin;
 
   constructor(app: App, plugin: CarryForwardPlugin) {
@@ -220,18 +210,52 @@ class SampleSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Carry-forward lines" });
+    containerEl.createEl("h2", { text: "Carry-forward" });
 
     new Setting(containerEl)
-      .setName("Setting #1")
-      .setDesc("It's a secret")
+      .setName("Link text")
+      .setDesc(
+        "Display text of copied links. Leaving this blank will display the text of the actual link."
+      )
       .addText((text) =>
         text
-          .setPlaceholder("Enter your secret")
+          .setPlaceholder("")
+          .setValue(DEFAULT_SETTINGS.linkText)
+          .onChange(async (value) => {
+            // if (value === "") {
+            //   this.plugin.settings.linkText = DEFAULT_SETTINGS.linkText;
+            // } else {
+            this.plugin.settings.linkText = value;
+            // }
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Remove from line")
+      .setDesc(
+        "A Regular Expression for any parts of a copied line to remove before adding a link."
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("")
+          .setValue("")
+          .onChange(async (value) => {
+            this.plugin.settings.linkText = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Copied text")
+      .setDesc("Display text of copied links. Use.")
+      .addText((text) =>
+        text
+          .setPlaceholder("")
           .setValue("")
           .onChange(async (value) => {
             console.log("Secret: " + value);
-            this.plugin.settings.mySetting = value;
+            this.plugin.settings.linkText = value;
             await this.plugin.saveSettings();
           })
       );
