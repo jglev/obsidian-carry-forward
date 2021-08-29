@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
-	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md/about",
-	"isDesktopOnly": false
+  "id": "obsidian-carry-forward-line",
+  "name": "Carry-Forward Lines",
+  "version": "0.0.1",
+  "minAppVersion": "0.12.12",
+  "description": "An Obsidian Notes plugin for generating and copying block IDs, and copying lines with a link to the copied line.",
+  "author": "Obsidian",
+  "authorUrl": "https://obsidian.md/about",
+  "isDesktopOnly": false
 }
