@@ -31,9 +31,10 @@ const genID = (length = 5) => {
 };
 
 enum CopyTypes {
-  SeparateLines, // 0
-  CombinedLines, // 1
-  LinkOnly, // 2
+  SeparateLines,
+  CombinedLines,
+  LinkOnly,
+  LinkOnlyEmbed,
 }
 
 const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
@@ -77,7 +78,13 @@ const copyForwardLines = (
   let newID = "";
   for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
     let line = editor.getLine(lineNumber);
-    let copiedLine = editor.getLine(lineNumber);
+    let copiedLine = line;
+    if (lineNumber === minLine || lineNumber === maxLine) {
+      copiedLine = line.slice(
+        lineNumber === minLine ? cursorFrom.ch : 0,
+        lineNumber === maxLine ? cursorTo.ch : line.length - 1
+      );
+    }
 
     if (copiedLine.match(/^\s*$/)) {
       copiedLines.push(copiedLine);
@@ -99,8 +106,8 @@ const copyForwardLines = (
           settings.linkText
         );
         line = line.replace(/ ?$/, ` ${newID}`);
-        if (copy === CopyTypes.LinkOnly) {
-          copiedLine = link;
+        if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
+          copiedLine = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
         } else {
           copiedLine = copiedLine.replace(
             new RegExp(settings.lineFormatFrom, "u"),
@@ -115,8 +122,8 @@ const copyForwardLines = (
           `#${blockID}`,
           settings.linkText
         );
-        if (copy === CopyTypes.LinkOnly) {
-          copiedLine = link;
+        if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
+          copiedLine = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
         } else {
           copiedLine = copiedLine
             .replace(blockIDRegex, "")
@@ -141,6 +148,7 @@ const copyForwardLines = (
     to: { line: maxLine, ch: editor.getLine(maxLine).length },
     text: updatedLines.join("\n"),
   });
+  transaction.selection = { from: cursorFrom, to: cursorTo };
   editor.transaction(transaction);
 };
 
@@ -154,7 +162,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines",
-      name: "Copy highlighted lines, each linked to current line",
+      name: "Copy selection with each line linked to its copied source",
       editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
         return copyForwardLines(
           checking,
@@ -169,7 +177,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines",
-      name: "Copy highlighted lines, first line linked to current line",
+      name: "Copy selection with first line linked to its copied source",
       editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
         return copyForwardLines(
           checking,
@@ -184,7 +192,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only",
-      name: "Copy link to first highlighted line",
+      name: "Copy link to line",
       editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
         return copyForwardLines(
           checking,
@@ -193,6 +201,21 @@ export default class CarryForwardPlugin extends Plugin {
           this.app,
           this.settings,
           CopyTypes.LinkOnly
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-embed-link-only",
+      name: "Copy embed link to line",
+      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
+        return copyForwardLines(
+          checking,
+          editor,
+          view,
+          this.app,
+          this.settings,
+          CopyTypes.LinkOnlyEmbed
         );
       },
     });

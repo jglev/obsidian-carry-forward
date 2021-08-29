@@ -1,57 +1,138 @@
-## Obsidian Sample Plugin
+<h1 align="center">Obsidian Carry Forward plugin</h1>
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+<p align="center">Copy text from a note, linking back to its copied source</a>.</p>
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+This plugin facilitates [linking to blocks](https://help.obsidian.md/How+to/Link+to+blocks) (e.g., specific lines) within an [Obsidian](https://obsidian.md/) note. It allows:
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+- Copying a link to the current line, and
+- Copying text from one note with automatically-added links back to the where the text was copied from. This can be useful, for example, when using systems like [Bullet Journal](https://bulletjournal.com/blogs/bulletjournalist/migration), which involve periodically moving tasks forward from past days' notes into the current day's note.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+> Please submit bugs here: https://github.com/publicus/obsidian-apply-patterns-plugin
+>
+> Please submit ideas here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/ideas
+>
+> Please ask for help here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/q-a
 
-### First time developing plugins?
+---
 
-Quick starting guide for new plugin devs:
+<ul>
+    <li><a href="#installation">Installation</a></li>
+    <li><a href="#usage">Usage</a></li>
+</ul>
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+For changes in each release, please check the releases page: https://github.com/publicus/obsidian-apply-patterns-plugin/releases
 
-### Releasing new releases
+---
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+## Screenshots
 
-### Adding your plugin to the community plugin list
+- *The theme is [Solarized Light](https://github.com/Slowbad/obsidian-solarized).*
+- *The theme has been enhanced for task management using [this CSS snippet](https://gist.github.com/publicus/30f289deb911cc8f8645c946e42f13a6). See [here](https://help.obsidian.md/Advanced+topics/Customizing+CSS) for instructions on incorporating CSS snippets in Obsidian.*
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+![Example Usage for Task management](docs/img/example-task-management.gif)
 
-### How to use
+Two "Patterns" have been defined, each with one "rule." These settings can be imported into the plugin by copying this JSON to the clipboard and clicking the "Import from Clipboard" button in the plugin's settings tab within Obsidian:
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+<details>
 
-### Manually installing the plugin
+```json
+[
+  {
+    "name": "Set open tasks as complete",
+    "done": false,
+    "rules": [
+      {
+        "from": "- \\[ \\] #(?:TODO|SCHEDULED)(.*?)\\(Due by \\[\\[(\\d{4}-\\d{2}-\\d{2})\\]\\]\\)",
+        "to": "- [X] #DONE$1(Completed on [[{{date:today}}]])",
+        "caseInsensitive": true,
+        "global": false,
+        "sticky": false,
+        "multiline": false,
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "name": "Reschedule closed task",
+    "done": false,
+    "rules": [
+      {
+        "from": "- \\[[Xx]\\] #DONE(.*?)\\(Completed on (.*?)\\)",
+        "to": "- [ ] #TODO$1(Due by [[{{date:two weeks from today}}]])",
+        "caseInsensitive": false,
+        "global": false,
+        "multiline": false,
+        "sticky": false
+      }
+    ]
+  }
+]
+```
+</details>
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
 
-### API Documentation
+The first Pattern, "Set open tasks as complete," will affect lines that have an open checkbox and a `#TODO` or `#SCHEDULED` hashtag, as well as the phrase "(Due by...)" with a date. **It replaces a match with a closed checkbox, a `#DONE` hashtag, the original body of the line, and today's date.**
 
-See https://github.com/obsidianmd/obsidian-api
+The second Pattern, "Reschedule closed task," will affect lines that have a closed checkbox (`-[x]`) and a `#DONE` hashtag, as well as the phrase "(Completed on...)". **It replaces a match with an open checkbox, a `#TODO` hashtag, and a "Due by" date that is two weeks in the future.**
+
+![Add, move, delete, and validate rules](docs/img/settings-add-remove-validate.gif)
+
+The plugin's Settings tab allows creating and removing Patterns, as well as importing and exporting patterns using the system's clipboard. Rules can be moved up and down within Patterns, and validated as correct in their `{{date}}` strings and Regular Expression syntax. Each rule can also have [Regular Expression modes](https://www.regular-expressions.info/refmodifiers.html) set.
+
+## Installation
+
+Follow the steps below to install the plugin.
+
+1. Search for "Carry Forward" in Obsidian's community plugins browser
+2. Enable the plugin in your Obsidian settings (find "Carry Forward" under "Community plugins").
+3. Check the "Carry Forward" settings tab. Add one or more patterns.
+4. (Optional) In the "Hotkeys" settings tab, add a hotkey for one or both of the "Carry Forward..." commands.
+
+## Usage
+
+- This plugin uses the [ECMAScript / Javascript flavor](https://www.regular-expressions.info/javascript.html) of Regular Expressions.
+- The plugin provides three commands by default:
+    - `Carry Forward: Copy highlighted lines, each linked to current line` will loop over each line that is selected in the editor, and apply the Pattern to the entirety of each line.
+    - - `Carry Forward: Copy highlighted lines, first line linked to current line` will apply the Pattern to the entire document, as one (potentially multi-line) string.
+    - `Carry Forward: Copy link to first highlighted line` will apply the Pattern to just the text selected in the editor, as one (potentially multi-line) string.
+    - In addition, you can set additional commands in the Settings tab.
+- Within the Settings tab:
+    - Each rule can be disabled, moved up, and moved down in the pattern.
+    - Clicking the information icon for a rule will open a Notice indicating whether the rule's `From` and `To` elements are valid.
+    - Both the `From` and `To` text boxes can use `$1`, `$2`, etc. to refer to [capture groups](https://www.regular-expressions.info/refcapture.html) from the `From` box.
+    - Both the `From` and `To` text boxes understand natural language dates (see below).
+    - Additional commands can be created from collections of Patterns. If a command only matches one Pattern, it will apply that Pattern when the command is run. If the command matches more than one Pattern, it will ask which Pattern to apply.
+      - Custom commands can be created to run on whole lines, the current selection, or the whole document.
+
+### Dates
+
+Within the `From` and `To` text boxes in a rule's settings, one can express dates in natural language, using the following format:  
+`{{date:start|end|format (default "YYYY-MM-DD")|separator (default "|")}}`
+
+- `start`, `end`, `format`, and `separator` are all optional. `{{date}}` by itself will default to the current day in `YYYY-MM-DD` format.
+- `format` can be any [format from DayJS](https://day.js.org/docs/en/parse/string-format#list-of-all-available-parsing-tokens).
+- `start` and `end` are both parsed using [`chrono-node`](https://github.com/wanasit/chrono).
+- Thus, the following formats are all valid:
+
+| Date syntax                       | Output, if processed on 2021-08-03 |
+| --------------------------------- | ---------------------------------- |
+| {{date}}                          | 2021-08-03                         |
+| {{date:today\|\|YYYY-MM}}         | 2021-08                            |
+| {{date:tomorrow}}                 | 2021-08-04                         |
+| {{date:two weeks from today}}     | 2021-08-17                         |
+| {{date:today\|two days from now}} | 2021-08-03\|2021-08-04\|2021-08-05 |
+| {{date:today\|tomorrow\|DD}}                                              |03\|04|
+| {{date:today\|two days from now\|\|, }}                                         |2021-08-03, 2021-08-04, 2021-08-05|
+
+This approach to expressing dates allows for powerfully searching for date ranges using Regular Expressions, or creating ranges of formatted dates in the output of a Pattern. For example, `[[{{date:today|tomorrow||]], [[}}]]` in the `To` text box of a rule will create the string "\[\[2021-08-03\]\], \[\[2021-08-04\]\]".
+
+## Development
+Clone the repository, run `yarn` to install the dependencies, and run `yarn dev` to compile the plugin and watch file changes.
+
+## License
+
+This plugin's code and documentation setup is based off of the [Obsidian Tasks](https://github.com/schemar/obsidian-tasks) plugin by [Martin Schenck](https://github.com/schemar). Like that plugin, this plugin is released under the [MIT license](./LICENSE).
+
+# Todo
+
+Automated tests are not currently included in this code for this repository. Assistance in this, particularly using the [Obsidian End-to-End testing approach](https://github.com/trashhalo/obsidian-plugin-e2e-test), is especially welcome!
