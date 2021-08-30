@@ -79,14 +79,20 @@ const copyForwardLines = (
   for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
     let line = editor.getLine(lineNumber);
     let copiedLine = line;
-    if (lineNumber === minLine || lineNumber === maxLine) {
+    if (
+      (lineNumber === minLine || lineNumber === maxLine) &&
+      !(minLine === maxLine && cursorFrom.ch !== cursorTo.ch)
+    ) {
       copiedLine = line.slice(
         lineNumber === minLine ? cursorFrom.ch : 0,
         lineNumber === maxLine ? cursorTo.ch : line.length - 1
       );
     }
 
-    if (copiedLine.match(/^\s*$/)) {
+    if (
+      copiedLine.match(/^\s*$/) &&
+      !(lineNumber === minLine && minLine === maxLine)
+    ) {
       copiedLines.push(copiedLine);
       updatedLines.push(line);
       continue;
