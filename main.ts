@@ -17,8 +17,8 @@ interface CarryForwardPluginSettings {
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
   linkText: "",
-  lineFormatFrom: "",
-  lineFormatTo: "",
+  lineFormatFrom: "\\s*$",
+  lineFormatTo: " (see {{LINK}})",
 };
 
 const genID = (length = 5) => {
@@ -81,7 +81,7 @@ const copyForwardLines = (
     let copiedLine = line;
     if (
       (lineNumber === minLine || lineNumber === maxLine) &&
-      !(minLine === maxLine && cursorFrom.ch !== cursorTo.ch)
+      !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
     ) {
       copiedLine = line.slice(
         lineNumber === minLine ? cursorFrom.ch : 0,
@@ -90,7 +90,7 @@ const copyForwardLines = (
     }
 
     if (
-      copiedLine.match(/^\s*$/) &&
+      editor.getLine(lineNumber).match(/^\s*$/) &&
       !(lineNumber === minLine && minLine === maxLine)
     ) {
       copiedLines.push(copiedLine);
@@ -111,7 +111,7 @@ const copyForwardLines = (
           `#${newID}`,
           settings.linkText
         );
-        line = line.replace(/ ?$/, ` ${newID}`);
+        line = line.replace(/\s*?$/, ` ${newID}`);
         if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
           copiedLine = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
         } else {
@@ -306,7 +306,9 @@ class CarryForwardSettingTab extends PluginSettingTab {
       )
       .addText((text) =>
         text
-          .setPlaceholder("From (Default: $ / End of line)")
+          .setPlaceholder(
+            `From (Default: "${DEFAULT_SETTINGS.lineFormatFrom}")`
+          )
           .setValue(this.plugin.settings.lineFormatFrom)
           .onChange(async (value) => {
             if (value === "") {
@@ -325,7 +327,7 @@ class CarryForwardSettingTab extends PluginSettingTab {
       )
       .addText((text) =>
         text
-          .setPlaceholder("To (Default: {{LINK}})")
+          .setPlaceholder(`To (Default: "${DEFAULT_SETTINGS.lineFormatTo}")`)
           .setValue(this.plugin.settings.lineFormatTo)
           .onChange(async (value) => {
             if (value === "") {
