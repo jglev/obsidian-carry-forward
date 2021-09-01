@@ -11,12 +11,14 @@ import {
 
 interface CarryForwardPluginSettings {
   linkText: string;
+  copiedLinkText: string;
   lineFormatFrom: string;
   lineFormatTo: string;
 }
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
   linkText: "",
+  copiedLinkText: "(see {{LINK}})",
   lineFormatFrom: "\\s*$",
   lineFormatTo: " (see {{LINK}})",
 };
@@ -113,7 +115,11 @@ const copyForwardLines = (
         );
         line = line.replace(/\s*?$/, ` ${newID}`);
         if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
-          copiedLine = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+          link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+          copiedLine =
+            copy === CopyTypes.LinkOnlyEmbed
+              ? link
+              : settings.copiedLinkText.replace("{{LINK}}", link);
         } else {
           copiedLine = copiedLine.replace(
             new RegExp(settings.lineFormatFrom, "u"),
@@ -129,7 +135,11 @@ const copyForwardLines = (
           settings.linkText
         );
         if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
-          copiedLine = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+          link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+          copiedLine =
+            copy === CopyTypes.LinkOnlyEmbed
+              ? link
+              : settings.copiedLinkText.replace("{{LINK}}", link);
         } else {
           copiedLine = copiedLine
             .replace(blockIDRegex, "")
@@ -141,7 +151,14 @@ const copyForwardLines = (
       }
     }
 
-    copiedLines.push(copiedLine);
+    if (
+      !(
+        (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) &&
+        lineNumber !== minLine
+      )
+    ) {
+      copiedLines.push(copiedLine);
+    }
     updatedLines.push(line);
   }
 
@@ -282,12 +299,25 @@ class CarryForwardSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Link text")
       .setDesc(
-        "Display text of copied links. Leaving this blank will display the text of the actual link."
+        "Text of links. Leaving this blank will display the text of the actual link."
       )
       .addText((text) => {
         const settings = this.plugin.settings;
         text.setValue(settings.linkText).onChange(async (value) => {
           settings.linkText = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Copied text")
+      .setDesc(
+        "The full text of copied references. Use {{LINK}} to place the link."
+      )
+      .addText((text) => {
+        const settings = this.plugin.settings;
+        text.setValue(settings.copiedLinkText).onChange(async (value) => {
+          settings.copiedLinkText = value;
           await this.plugin.saveSettings();
         });
       });
@@ -300,9 +330,9 @@ class CarryForwardSettingTab extends PluginSettingTab {
     }
 
     new Setting(fromToEl)
-      .setName("Transform Line")
+      .setName("Transform copied line")
       .setDesc(
-        "When copying a line, replace the first match of a Regular Expression with text. Use {{LINK}} in the To field to place a link."
+        "When copying a line, replace the first match of a Regular Expression with text. Use {{LINK}} in the To field to place the link."
       )
       .addText((text) =>
         text

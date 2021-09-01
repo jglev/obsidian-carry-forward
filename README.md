@@ -91,10 +91,11 @@ Follow the steps below to install the plugin.
 ## Usage
 
 - This plugin uses the [ECMAScript / Javascript flavor](https://www.regular-expressions.info/javascript.html) of Regular Expressions.
-- The plugin provides three commands by default:
-    - `Carry Forward: Copy highlighted lines, each linked to current line` will loop over each line that is selected in the editor, and apply the Pattern to the entirety of each line.
-    - - `Carry Forward: Copy highlighted lines, first line linked to current line` will apply the Pattern to the entire document, as one (potentially multi-line) string.
-    - `Carry Forward: Copy link to first highlighted line` will apply the Pattern to just the text selected in the editor, as one (potentially multi-line) string.
+- The plugin provides four commands:
+    - `Carry Forward: Copy selection with each line linked to its copied source` will loop over each line that is selected in the editor, and apply the Pattern to the entirety of each line.
+    - - `Carry Forward: Copy selection with first line linked to its copied source` will apply the Pattern to the entire document, as one (potentially multi-line) string.
+    - `Carry Forward: Copy link to line` will apply the Pattern to just the text selected in the editor, as one (potentially multi-line) string.
+    - `Carry Forward: Copy embed link to line` will apply the Pattern to just the text selected in the editor, as one (potentially multi-line) string.
     - In addition, you can set additional commands in the Settings tab.
 - Within the Settings tab:
     - Each rule can be disabled, moved up, and moved down in the pattern.
