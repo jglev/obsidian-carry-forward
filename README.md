@@ -1,57 +1,65 @@
-## Obsidian Sample Plugin
+<h1 align="center">Obsidian Carry-Forward plugin</h1>
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+<p align="center">Copy text from a note, linking back to its copied source, or copy a link to a note block</a>.</p>
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+This plugin facilitates [linking to blocks](https://help.obsidian.md/How+to/Link+to+blocks) (e.g., specific lines) within an [Obsidian](https://obsidian.md/) note. It allows:
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+- Copying a link to the current line, and
+- Copying text from one note with automatically-added links back to the where the text was copied from. This can be useful, for example, when using note-taking methods like [Bullet Journaling](https://bulletjournal.com/blogs/bulletjournalist/migration), which involve periodically moving tasks forward from past days' notes into the current day's note.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+> Please submit bugs here: https://github.com/publicus/obsidian-apply-patterns-plugin
+>
+> Please submit ideas here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/ideas
+>
+> Please ask for help here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/q-a
 
-### First time developing plugins?
+---
 
-Quick starting guide for new plugin devs:
+<ul>
+    <li><a href="#installation">Installation</a></li>
+    <li><a href="#usage">Usage</a></li>
+</ul>
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+For changes in each release, please check the releases page: https://github.com/publicus/obsidian-apply-patterns-plugin/releases
 
-### Releasing new releases
+---
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+## Screenshots and Usage
 
-### Adding your plugin to the community plugin list
+The plugin provides four commands:
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+1. `Carry Forward: Copy selection with each line linked to its copied source`  
+  ![](docs/img/copy-selection-with-each-line-linked.gif)
 
-### How to use
+2. `Carry Forward: Copy selection with first line linked to its copied source`  
+  ![](docs/img/copy-selection-with-first-line-linked.gif)
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+3. `Carry Forward: Copy link to line`  
+   ![](docs/img/copy-link-to-line.gif)
 
-### Manually installing the plugin
+4. `Carry Forward: Copy embed link to line`  
+   ![](docs/img/copy-embed-link-to-line.gif)
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+- Within the Settings tab, a [Regular Expression](https://www.regular-expressions.info) can be set for precisely placing links in the copied text -- whether at the beginning of a line, end of a line, or replacing existing text.
+  - This plugin uses the [ECMAScript / Javascript flavor](https://www.regular-expressions.info/javascript.html) of Regular Expressions.
+- *The theme in the screenshots above is [Solarized Light](https://github.com/Slowbad/obsidian-solarized).*
 
-### API Documentation
+## Installation
 
-See https://github.com/obsidianmd/obsidian-api
+Follow the steps below to install the plugin.
+
+1. Search for "Carry Forward" in Obsidian's community plugins browser
+2. Enable the plugin in your Obsidian settings (find "Carry Forward" under "Community plugins").
+3. Check the "Carry Forward" settings tab.
+4. (Optional) In the "Hotkeys" settings tab, add a hotkey for one or both of the "Carry Forward..." commands.
+
+## Development
+Clone the repository, run `yarn` to install the dependencies, and run `yarn dev` to compile the plugin and watch file changes.
+
+## License
+
+This plugin's documentation setup is based off of the [Obsidian Tasks](https://github.com/schemar/obsidian-tasks) plugin by [Martin Schenck](https://github.com/schemar). Like that plugin, this plugin is released under the [MIT license](./LICENSE).
+
+# Todo
+
+Automated tests are not currently included in this code for this repository. Assistance in this, particularly using the [Obsidian End-to-End testing approach](https://github.com/trashhalo/obsidian-plugin-e2e-test), is especially welcome!
