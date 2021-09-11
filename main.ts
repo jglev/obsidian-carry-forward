@@ -14,6 +14,7 @@ interface CarryForwardPluginSettings {
   copiedLinkText: string;
   lineFormatFrom: string;
   lineFormatTo: string;
+  removeLeadingWhitespace: boolean;
 }
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
   copiedLinkText: "(see {{LINK}})",
   lineFormatFrom: "\\s*$",
   lineFormatTo: " (see {{LINK}})",
+  removeLeadingWhitespace: true,
 };
 
 const genID = (length = 5) => {
@@ -44,7 +46,6 @@ const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
 const copyForwardLines = (
   editor: Editor,
   view: MarkdownView,
-  app: App,
   settings: CarryForwardPluginSettings,
   copy: CopyTypes = CopyTypes.SeparateLines
 ) => {
@@ -74,6 +75,12 @@ const copyForwardLines = (
   for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
     let line = editor.getLine(lineNumber);
     let copiedLine = line;
+    if (settings.removeLeadingWhitespace === true && (lineNumber === minLine && cursorFrom.ch === cursorTo.ch)) {
+      // Remove leading whitespace if the user is copying a full line without
+      // having selected a specific part of the line:
+      copiedLine = copiedLine.replace(/^\s*/, '');
+    }
+
     if (
       (lineNumber === minLine || lineNumber === maxLine) &&
       !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
@@ -183,7 +190,6 @@ export default class CarryForwardPlugin extends Plugin {
         return copyForwardLines(
           editor,
           view,
-          this.app,
           this.settings,
           CopyTypes.SeparateLines
         );
@@ -197,7 +203,6 @@ export default class CarryForwardPlugin extends Plugin {
         return copyForwardLines(
           editor,
           view,
-          this.app,
           this.settings,
           CopyTypes.CombinedLines
         );
@@ -211,7 +216,6 @@ export default class CarryForwardPlugin extends Plugin {
         return copyForwardLines(
           editor,
           view,
-          this.app,
           this.settings,
           CopyTypes.LinkOnly
         );
@@ -225,7 +229,6 @@ export default class CarryForwardPlugin extends Plugin {
         return copyForwardLines(
           editor,
           view,
-          this.app,
           this.settings,
           CopyTypes.LinkOnlyEmbed
         );
@@ -357,5 +360,18 @@ class CarryForwardSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+      new Setting(containerEl)
+      .setName("Remove leading whitespace from first line")
+      .setDesc(
+        "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copy."
+      )
+      .addToggle((toggle) => {
+        const settings = this.plugin.settings;
+        toggle.setValue(settings.removeLeadingWhitespace).onChange(async (value) => {
+          settings.removeLeadingWhitespace = value;
+          await this.plugin.saveSettings();
+        });
+      });
   }
 }
