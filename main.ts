@@ -2,11 +2,11 @@ import {
   App,
   Editor,
   EditorTransaction,
+  MarkdownView,
   Notice,
   Plugin,
   PluginSettingTab,
   Setting,
-  View,
 } from "obsidian";
 
 interface CarryForwardPluginSettings {
@@ -42,19 +42,12 @@ enum CopyTypes {
 const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
 
 const copyForwardLines = (
-  checking: boolean,
   editor: Editor,
-  view: View,
+  view: MarkdownView,
   app: App,
   settings: CarryForwardPluginSettings,
   copy: CopyTypes = CopyTypes.SeparateLines
 ) => {
-  if (checking) {
-    // editorCallback always happens in a MarkdownView; the command should
-    // only be shown in MarkdownView:
-    return true;
-  }
-
   const regexValidation = validateRegex(settings.lineFormatFrom);
   if (regexValidation.valid !== true) {
     new Notice(
@@ -73,7 +66,7 @@ const copyForwardLines = (
     changes: [],
   };
 
-  const file = app.workspace.getActiveFile();
+  const file = view.file;
 
   const updatedLines: string[] = [];
   const copiedLines: string[] = [];
@@ -186,9 +179,8 @@ export default class CarryForwardPlugin extends Plugin {
     this.addCommand({
       id: "carry-line-forward-separate-lines",
       name: "Copy selection with each line linked to its copied source",
-      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => {
         return copyForwardLines(
-          checking,
           editor,
           view,
           this.app,
@@ -201,9 +193,8 @@ export default class CarryForwardPlugin extends Plugin {
     this.addCommand({
       id: "carry-line-forward-combined-lines",
       name: "Copy selection with first line linked to its copied source",
-      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => {
         return copyForwardLines(
-          checking,
           editor,
           view,
           this.app,
@@ -216,9 +207,8 @@ export default class CarryForwardPlugin extends Plugin {
     this.addCommand({
       id: "carry-line-forward-link-only",
       name: "Copy link to line",
-      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => {
         return copyForwardLines(
-          checking,
           editor,
           view,
           this.app,
@@ -231,9 +221,8 @@ export default class CarryForwardPlugin extends Plugin {
     this.addCommand({
       id: "carry-line-forward-embed-link-only",
       name: "Copy embed link to line",
-      editorCheckCallback: (checking: boolean, editor: Editor, view: View) => {
+      editorCallback: (editor: Editor, view: MarkdownView) => {
         return copyForwardLines(
-          checking,
           editor,
           view,
           this.app,

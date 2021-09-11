@@ -1,6 +1,6 @@
 <h1 align="center">Obsidian Carry-Forward plugin</h1>
 
-<p align="center">Copy text from a note, linking back to its copied source, or copy a link to a note block</a>.</p>
+<p align="center">Copy text from a note, linking back to its copied source, or copy a link to a note block.</p>
 
 This plugin facilitates [linking to blocks](https://help.obsidian.md/How+to/Link+to+blocks) (e.g., specific lines) within an [Obsidian](https://obsidian.md/) note. It allows:
 
