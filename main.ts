@@ -119,11 +119,11 @@ const copyForwardLines = (
           copiedLine =
             copy === CopyTypes.LinkOnlyEmbed
               ? link
-              : settings.copiedLinkText.replace("{{LINK}}", link);
+              : settings.copiedLinkText.replace(/{{LINK(\|?.*)}}/, `${link.replace(/]]$/, "")}$1]]`);
         } else {
           copiedLine = copiedLine.replace(
             new RegExp(settings.lineFormatFrom, "u"),
-            settings.lineFormatTo.replace("{{LINK}}", link)
+            settings.lineFormatTo.replace(/{{LINK(\|?.*)}}/, `${link.replace(/]]$/, "")}$1]]`)
           );
         }
       } else {
@@ -139,13 +139,13 @@ const copyForwardLines = (
           copiedLine =
             copy === CopyTypes.LinkOnlyEmbed
               ? link
-              : settings.copiedLinkText.replace("{{LINK}}", link);
+              : settings.copiedLinkText.replace(/{{LINK(\|?.*)}}/, `${link.replace(/]]$/, "")}$1]]`);
         } else {
           copiedLine = copiedLine
             .replace(blockIDRegex, "")
             .replace(
               new RegExp(settings.lineFormatFrom, "u"),
-              settings.lineFormatTo.replace("{{LINK}}", link)
+              settings.lineFormatTo.replace(/{{LINK(\|?.*)}}/, `${link.replace(/]]$/, "")}$1]]`)
             );
         }
       }
