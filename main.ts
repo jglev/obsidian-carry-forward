@@ -415,11 +415,10 @@ class CarryForwardSettingTab extends PluginSettingTab {
 
   display(): void {
     let { containerEl } = this;
+
     containerEl.empty();
 
-    const fragment = document.createDocumentFragment();
-
-    containerEl.createEl("h2", { text: "Carry-forward" });
+    containerEl.createEl("h1", { text: "Carry-forward" });
 
     new Setting(containerEl)
       .setName("Default link text")
@@ -435,17 +434,12 @@ class CarryForwardSettingTab extends PluginSettingTab {
       });
 
     const copiedLinksEl = containerEl.createEl("div");
-    copiedLinksEl.createEl("h3", { text: "Copied references" });
+    copiedLinksEl.createEl("h2", { text: "Copied references" });
 
-    copiedLinksEl
-      .createEl("p")
-      .append(
-        'Settings relating to "',
-        fragment.createEl("code", { text: "Copy link to line..." }),
-        '" and "',
-        fragment.createEl("code", { text: "Copy embed link to line..." }),
-        '" commands.'
-      );
+    copiedLinksEl.createEl("p", {
+      text: 'Settings relating to "Copy link to line..." and "Copy embed link to line..." commands.',
+      cls: "setting-item-description",
+    });
 
     new Setting(copiedLinksEl)
       .setName("Copied references")
@@ -461,9 +455,10 @@ class CarryForwardSettingTab extends PluginSettingTab {
       });
 
     const copiedLinesEl = containerEl.createEl("div");
-    copiedLinesEl.createEl("h3", { text: "Copied lines" });
+    copiedLinesEl.createEl("h2", { text: "Copied lines" });
     copiedLinesEl.createEl("p", {
       text: 'Settings relating to "Copy selection..." commands.',
+      cls: "setting-item-description",
     });
 
     const fromToEl = copiedLinesEl.createEl("div");
@@ -501,7 +496,7 @@ class CarryForwardSettingTab extends PluginSettingTab {
     new Setting(fromToEl)
       .setName("To")
       .setDesc(
-        "Replace the first match with text. Use {{LINK}} to place the link."
+        "Replace the first match in each copied line with text. Use {{LINK}} to place the link."
       )
       .addText((text) =>
         text
@@ -520,7 +515,7 @@ class CarryForwardSettingTab extends PluginSettingTab {
     new Setting(copiedLinesEl)
       .setName("Remove leading whitespace from first line")
       .setDesc(
-        "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copy."
+        "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copied line."
       )
       .addToggle((toggle) => {
         const settings = this.plugin.settings;
