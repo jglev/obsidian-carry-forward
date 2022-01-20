@@ -205,7 +205,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines",
-      name: "Copy selection with each line linked to its copied source (link text from settings)",
+      name: "Copy selection with each line linked to its copied source (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
           editor,
@@ -218,7 +218,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines",
-      name: "Copy selection with first line linked to its copied source (link text from settings)",
+      name: "Copy selection with first line linked to its copied source (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
           editor,
@@ -231,7 +231,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only",
-      name: "Copy link to line (link text from settings)",
+      name: "Copy link to line (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
           editor,
@@ -244,7 +244,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-embed-link-only",
-      name: "Copy embed link to line (link text from settings)",
+      name: "Copy embed link to line (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
           editor,
@@ -415,15 +415,16 @@ class CarryForwardSettingTab extends PluginSettingTab {
 
   display(): void {
     let { containerEl } = this;
-
     containerEl.empty();
+
+    const fragment = document.createDocumentFragment();
 
     containerEl.createEl("h2", { text: "Carry-forward" });
 
     new Setting(containerEl)
-      .setName("Link text")
+      .setName("Default link text")
       .setDesc(
-        "Text of links. Leaving this blank will display the text of the actual link."
+        'The default text that "{{LINK}}" in the settings below will be replaced with. Leaving this blank will display the actual text of the link.'
       )
       .addText((text) => {
         const settings = this.plugin.settings;
@@ -433,8 +434,21 @@ class CarryForwardSettingTab extends PluginSettingTab {
         });
       });
 
-    new Setting(containerEl)
-      .setName("Copied text")
+    const copiedLinksEl = containerEl.createEl("div");
+    copiedLinksEl.createEl("h3", { text: "Copied references" });
+
+    copiedLinksEl
+      .createEl("p")
+      .append(
+        'Settings relating to "',
+        fragment.createEl("code", { text: "Copy link to line..." }),
+        '" and "',
+        fragment.createEl("code", { text: "Copy embed link to line..." }),
+        '" commands.'
+      );
+
+    new Setting(copiedLinksEl)
+      .setName("Copied references")
       .setDesc(
         "The full text of copied references. Use {{LINK}} to place the link."
       )
@@ -446,7 +460,13 @@ class CarryForwardSettingTab extends PluginSettingTab {
         });
       });
 
-    const fromToEl = containerEl.createEl("div");
+    const copiedLinesEl = containerEl.createEl("div");
+    copiedLinesEl.createEl("h3", { text: "Copied lines" });
+    copiedLinesEl.createEl("p", {
+      text: 'Settings relating to "Copy selection..." commands.',
+    });
+
+    const fromToEl = copiedLinesEl.createEl("div");
     fromToEl.addClass("from-to-rule");
 
     if (validateRegex(this.plugin.settings.lineFormatFrom).valid !== true) {
@@ -454,15 +474,13 @@ class CarryForwardSettingTab extends PluginSettingTab {
     }
 
     new Setting(fromToEl)
-      .setName("Transform copied line")
+      .setName("From")
       .setDesc(
-        "When copying a line, replace the first match of a Regular Expression with text. Use {{LINK}} in the To field to place the link."
+        "Find the first match of a Regular Expression in each copied line"
       )
       .addText((text) =>
         text
-          .setPlaceholder(
-            `From (Default: "${DEFAULT_SETTINGS.lineFormatFrom}")`
-          )
+          .setPlaceholder(DEFAULT_SETTINGS.lineFormatFrom)
           .setValue(this.plugin.settings.lineFormatFrom)
           .onChange(async (value) => {
             if (value === "") {
@@ -478,10 +496,16 @@ class CarryForwardSettingTab extends PluginSettingTab {
             }
             await this.plugin.saveSettings();
           })
+      );
+
+    new Setting(fromToEl)
+      .setName("To")
+      .setDesc(
+        "Replace the first match with text. Use {{LINK}} to place the link."
       )
       .addText((text) =>
         text
-          .setPlaceholder(`To (Default: "${DEFAULT_SETTINGS.lineFormatTo}")`)
+          .setPlaceholder(DEFAULT_SETTINGS.lineFormatTo)
           .setValue(this.plugin.settings.lineFormatTo)
           .onChange(async (value) => {
             if (value === "") {
@@ -493,17 +517,19 @@ class CarryForwardSettingTab extends PluginSettingTab {
           })
       );
 
-      new Setting(containerEl)
+    new Setting(copiedLinesEl)
       .setName("Remove leading whitespace from first line")
       .setDesc(
         "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copy."
       )
       .addToggle((toggle) => {
         const settings = this.plugin.settings;
-        toggle.setValue(settings.removeLeadingWhitespace).onChange(async (value) => {
-          settings.removeLeadingWhitespace = value;
-          await this.plugin.saveSettings();
-        });
+        toggle
+          .setValue(settings.removeLeadingWhitespace)
+          .onChange(async (value) => {
+            settings.removeLeadingWhitespace = value;
+            await this.plugin.saveSettings();
+          });
       });
   }
 }
