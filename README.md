@@ -7,11 +7,11 @@ This plugin facilitates [linking to blocks](https://help.obsidian.md/How+to/Link
 - Copying a link to the current line, and
 - Copying text from one note with automatically-added links back to the where the text was copied from. This can be useful, for example, when using note-taking methods like [Bullet Journaling](https://bulletjournal.com/blogs/bulletjournalist/migration), which involve periodically moving tasks forward from past days' notes into the current day's note.
 
-> Please submit bugs here: https://github.com/publicus/obsidian-apply-patterns-plugin
+> Please submit bugs here: https://github.com/publicus/obsidian-carry-forward
 >
-> Please submit ideas here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/ideas
+> Please submit ideas here: https://github.com/publicus/obsidian-carry-forward/discussions/categories/ideas
 >
-> Please ask for help here: https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/q-a
+> Please ask for help here: https://github.com/publicus/obsidian-carry-forward/discussions/categories/q-a
 
 ---
 
@@ -20,7 +20,7 @@ This plugin facilitates [linking to blocks](https://help.obsidian.md/How+to/Link
     <li><a href="#usage">Usage</a></li>
 </ul>
 
-For changes in each release, please check the releases page: https://github.com/publicus/obsidian-apply-patterns-plugin/releases
+For changes in each release, please check the releases page: https://github.com/publicus/obsidian-carry-forward/releases
 
 ---
 
