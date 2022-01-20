@@ -41,13 +41,20 @@ enum CopyTypes {
   LinkOnlyEmbed,
 }
 
+enum Mode {
+  LinkTextFromSettings,
+  LinkTextFromSelection,
+  LinkTextFromClipboard,
+}
+
 const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
 
-const copyForwardLines = (
+const copyForwardLines = async (
   editor: Editor,
   view: MarkdownView,
   settings: CarryForwardPluginSettings,
-  copy: CopyTypes = CopyTypes.SeparateLines
+  copy: CopyTypes = CopyTypes.SeparateLines,
+  mode: Mode = Mode.LinkTextFromSettings
 ) => {
   const regexValidation = validateRegex(settings.lineFormatFrom);
   if (regexValidation.valid !== true) {
@@ -75,10 +82,14 @@ const copyForwardLines = (
   for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
     let line = editor.getLine(lineNumber);
     let copiedLine = line;
-    if (settings.removeLeadingWhitespace === true && (lineNumber === minLine && cursorFrom.ch === cursorTo.ch)) {
+    if (
+      settings.removeLeadingWhitespace === true &&
+      lineNumber === minLine &&
+      cursorFrom.ch === cursorTo.ch
+    ) {
       // Remove leading whitespace if the user is copying a full line without
       // having selected a specific part of the line:
-      copiedLine = copiedLine.replace(/^\s*/, '');
+      copiedLine = copiedLine.replace(/^\s*/, "");
     }
 
     if (
@@ -100,6 +111,15 @@ const copyForwardLines = (
       continue;
     }
 
+    let linkText = settings.linkText;
+
+    if (mode === Mode.LinkTextFromSelection) {
+      linkText = editor.getSelection();
+    }
+    if (mode === Mode.LinkTextFromClipboard) {
+      linkText = await navigator.clipboard.readText();
+    }
+
     if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
       // Does the line already have a block ID?
       const blockID = line.match(blockIDRegex);
@@ -111,7 +131,7 @@ const copyForwardLines = (
           file,
           "/",
           `#${newID}`,
-          settings.linkText
+          linkText
         );
         line = line.replace(/\s*?$/, ` ${newID}`);
         if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
@@ -132,7 +152,7 @@ const copyForwardLines = (
           file,
           "/",
           `#${blockID}`,
-          settings.linkText
+          linkText
         );
         if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
           link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
@@ -185,9 +205,9 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines",
-      name: "Copy selection with each line linked to its copied source",
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        return copyForwardLines(
+      name: "Copy selection with each line linked to its copied source (default link text)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
           editor,
           view,
           this.settings,
@@ -198,9 +218,9 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines",
-      name: "Copy selection with first line linked to its copied source",
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        return copyForwardLines(
+      name: "Copy selection with first line linked to its copied source (default link text)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
           editor,
           view,
           this.settings,
@@ -211,9 +231,9 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only",
-      name: "Copy link to line",
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        return copyForwardLines(
+      name: "Copy link to line (default link text)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
           editor,
           view,
           this.settings,
@@ -224,13 +244,125 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-embed-link-only",
-      name: "Copy embed link to line",
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        return copyForwardLines(
+      name: "Copy embed link to line (default link text)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
           editor,
           view,
           this.settings,
           CopyTypes.LinkOnlyEmbed
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-separate-lines-selection",
+      name: "Copy selection with each line linked to its copied source (link text from selection)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.SeparateLines,
+          Mode.LinkTextFromSelection
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-combined-lines-selection",
+      name: "Copy selection with first line linked to its copied source (link text from selection)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.CombinedLines,
+          Mode.LinkTextFromSelection
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-link-only-selection",
+      name: "Copy link to line (link text from selection)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.LinkOnly,
+          Mode.LinkTextFromSelection
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-embed-link-only-selection",
+      name: "Copy embed link to line (link text from selection)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.LinkOnlyEmbed,
+          Mode.LinkTextFromSelection
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-separate-lines-clipboard",
+      name: "Copy selection with each line linked to its copied source (link text from clipboard)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.SeparateLines,
+          Mode.LinkTextFromClipboard
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-combined-lines-clipboard",
+      name: "Copy selection with first line linked to its copied source (link text from clipboard)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.CombinedLines,
+          Mode.LinkTextFromClipboard
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-link-only-clipboard",
+      name: "Copy link to line (link text from clipboard)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.LinkOnly,
+          Mode.LinkTextFromClipboard
+        );
+      },
+    });
+
+    this.addCommand({
+      id: "carry-line-forward-embed-link-only-clipboard",
+      name: "Copy embed link to line (link text from clipboard)",
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        return await copyForwardLines(
+          editor,
+          view,
+          this.settings,
+          CopyTypes.LinkOnlyEmbed,
+          Mode.LinkTextFromClipboard
         );
       },
     });
@@ -286,12 +418,12 @@ class CarryForwardSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Carry-forward" });
+    containerEl.createEl("h1", { text: "Carry-forward" });
 
     new Setting(containerEl)
-      .setName("Link text")
+      .setName("Default link text")
       .setDesc(
-        "Text of links. Leaving this blank will display the text of the actual link."
+        'The default text that "{{LINK}}" in the settings below will be replaced with. Leaving this blank will display the actual text of the link.'
       )
       .addText((text) => {
         const settings = this.plugin.settings;
@@ -301,8 +433,16 @@ class CarryForwardSettingTab extends PluginSettingTab {
         });
       });
 
-    new Setting(containerEl)
-      .setName("Copied text")
+    const copiedLinksEl = containerEl.createEl("div");
+    copiedLinksEl.createEl("h2", { text: "Copied references" });
+
+    copiedLinksEl.createEl("p", {
+      text: 'Settings relating to "Copy link to line..." and "Copy embed link to line..." commands.',
+      cls: "setting-item-description",
+    });
+
+    new Setting(copiedLinksEl)
+      .setName("Copied references")
       .setDesc(
         "The full text of copied references. Use {{LINK}} to place the link."
       )
@@ -314,7 +454,14 @@ class CarryForwardSettingTab extends PluginSettingTab {
         });
       });
 
-    const fromToEl = containerEl.createEl("div");
+    const copiedLinesEl = containerEl.createEl("div");
+    copiedLinesEl.createEl("h2", { text: "Copied lines" });
+    copiedLinesEl.createEl("p", {
+      text: 'Settings relating to "Copy selection..." commands.',
+      cls: "setting-item-description",
+    });
+
+    const fromToEl = copiedLinesEl.createEl("div");
     fromToEl.addClass("from-to-rule");
 
     if (validateRegex(this.plugin.settings.lineFormatFrom).valid !== true) {
@@ -322,15 +469,13 @@ class CarryForwardSettingTab extends PluginSettingTab {
     }
 
     new Setting(fromToEl)
-      .setName("Transform copied line")
+      .setName("From")
       .setDesc(
-        "When copying a line, replace the first match of a Regular Expression with text. Use {{LINK}} in the To field to place the link."
+        "Find the first match of a Regular Expression in each copied line"
       )
       .addText((text) =>
         text
-          .setPlaceholder(
-            `From (Default: "${DEFAULT_SETTINGS.lineFormatFrom}")`
-          )
+          .setPlaceholder(DEFAULT_SETTINGS.lineFormatFrom)
           .setValue(this.plugin.settings.lineFormatFrom)
           .onChange(async (value) => {
             if (value === "") {
@@ -346,10 +491,16 @@ class CarryForwardSettingTab extends PluginSettingTab {
             }
             await this.plugin.saveSettings();
           })
+      );
+
+    new Setting(fromToEl)
+      .setName("To")
+      .setDesc(
+        "Replace the first match in each copied line with text. Use {{LINK}} to place the link."
       )
       .addText((text) =>
         text
-          .setPlaceholder(`To (Default: "${DEFAULT_SETTINGS.lineFormatTo}")`)
+          .setPlaceholder(DEFAULT_SETTINGS.lineFormatTo)
           .setValue(this.plugin.settings.lineFormatTo)
           .onChange(async (value) => {
             if (value === "") {
@@ -361,17 +512,19 @@ class CarryForwardSettingTab extends PluginSettingTab {
           })
       );
 
-      new Setting(containerEl)
+    new Setting(copiedLinesEl)
       .setName("Remove leading whitespace from first line")
       .setDesc(
-        "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copy."
+        "When copying a line without having selected a specific part of that line, remove any whitespace at the beginning of the copied line."
       )
       .addToggle((toggle) => {
         const settings = this.plugin.settings;
-        toggle.setValue(settings.removeLeadingWhitespace).onChange(async (value) => {
-          settings.removeLeadingWhitespace = value;
-          await this.plugin.saveSettings();
-        });
+        toggle
+          .setValue(settings.removeLeadingWhitespace)
+          .onChange(async (value) => {
+            settings.removeLeadingWhitespace = value;
+            await this.plugin.saveSettings();
+          });
       });
   }
 }
