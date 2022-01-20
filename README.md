@@ -26,7 +26,7 @@ For changes in each release, please check the releases page: https://github.com/
 
 ## Screenshots and Usage
 
-The plugin provides four commands:
+The plugin provides four primary commands:
 
 1. `Carry Forward: Copy selection with each line linked to its copied source`  
   ![](docs/img/copy-selection-with-each-line-linked.gif)
@@ -43,6 +43,8 @@ The plugin provides four commands:
 - Within the Settings tab, a [Regular Expression](https://www.regular-expressions.info) can be set for precisely placing links in the copied text -- whether at the beginning of a line, end of a line, or replacing existing text.
   - This plugin uses the [ECMAScript / Javascript flavor](https://www.regular-expressions.info/javascript.html) of Regular Expressions.
 - *The theme in the screenshots above is [Solarized Light](https://github.com/Slowbad/obsidian-solarized).*
+
+Variants of the above commands allow setting the copied link's text using the **current selection** or the **current clipboard text.**
 
 ## Installation
 
