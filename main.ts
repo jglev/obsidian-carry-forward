@@ -15,6 +15,7 @@ interface CarryForwardPluginSettings {
   lineFormatFrom: string;
   lineFormatTo: string;
   removeLeadingWhitespace: boolean;
+  displayCopiedNotice: boolean;
 }
 
 const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: CarryForwardPluginSettings = {
   lineFormatFrom: "\\s*$",
   lineFormatTo: " (see {{LINK}})",
   removeLeadingWhitespace: true,
+  displayCopiedNotice: true,
 };
 
 const genID = (length = 5) => {
@@ -183,7 +185,9 @@ const copyForwardLines = async (
   }
 
   navigator.clipboard.writeText(copiedLines.join("\n")).then(() => {
-    new Notice("Copied");
+    if (settings.displayCopiedNotice || false) {
+      new Notice("Copied");
+    }
   });
 
   transaction.changes?.push({
@@ -523,6 +527,21 @@ class CarryForwardSettingTab extends PluginSettingTab {
           .setValue(settings.removeLeadingWhitespace)
           .onChange(async (value) => {
             settings.removeLeadingWhitespace = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Notify on successful copy")
+      .setDesc(
+        'Display a "Copied" notice upon successfully copying text to the clipboard.'
+      )
+      .addToggle((toggle) => {
+        const settings = this.plugin.settings;
+        toggle
+          .setValue(settings.displayCopiedNotice)
+          .onChange(async (value) => {
+            settings.displayCopiedNotice = value;
             await this.plugin.saveSettings();
           });
       });
