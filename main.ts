@@ -1,6 +1,7 @@
 import {
   App,
   Editor,
+  EditorChange,
   EditorTransaction,
   MarkdownView,
   Notice,
@@ -67,122 +68,137 @@ const copyForwardLines = async (
     return;
   }
 
-  const cursorFrom = editor.getCursor("from");
-  const cursorTo = editor.getCursor("to");
-  const minLine = cursorFrom.line;
-  const maxLine = cursorTo.line;
+  const selections = editor.listSelections();
+  console.log(71, selections);
 
-  const transaction: EditorTransaction = {
-    changes: [],
-  };
+  const copiedLines: string[] = [];
+  const changes = new Set<EditorChange>();
 
   const file = view.file;
 
-  const updatedLines: string[] = [];
-  const copiedLines: string[] = [];
-  let newID = "";
-  for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
-    let line = editor.getLine(lineNumber);
-    let copiedLine = line;
-    if (
-      settings.removeLeadingWhitespace === true &&
-      lineNumber === minLine &&
-      cursorFrom.ch === cursorTo.ch
-    ) {
-      // Remove leading whitespace if the user is copying a full line without
-      // having selected a specific part of the line:
-      copiedLine = copiedLine.replace(/^\s*/, "");
-    }
+  selections.forEach(async (selection) => {
+    const cursorFrom = selection.anchor;
+    const cursorTo = selection.head;
+    const minLine = Math.min(cursorFrom.line, cursorTo.line);
+    const maxLine = Math.max(cursorFrom.line, cursorTo.line);
+    console.log(84, cursorFrom, cursorTo);
 
-    if (
-      (lineNumber === minLine || lineNumber === maxLine) &&
-      !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
-    ) {
-      copiedLine = line.slice(
-        lineNumber === minLine ? cursorFrom.ch : 0,
-        lineNumber === maxLine ? cursorTo.ch : line.length - 1
-      );
-    }
+    const updatedLines: string[] = [];
+    let newID = "";
+    for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
+      console.log(90);
+      let line = editor.getLine(lineNumber);
+      let copiedLine = line;
+      if (
+        settings.removeLeadingWhitespace === true &&
+        lineNumber === minLine &&
+        cursorFrom.ch === cursorTo.ch
+      ) {
+        // Remove leading whitespace if the user is copying a full line without
+        // having selected a specific part of the line:
+        copiedLine = copiedLine.replace(/^\s*/, "");
+      }
 
-    if (
-      editor.getLine(lineNumber).match(/^\s*$/) &&
-      !(lineNumber === minLine && minLine === maxLine)
-    ) {
-      copiedLines.push(copiedLine);
-      updatedLines.push(line);
-      continue;
-    }
-
-    let linkText = settings.linkText;
-
-    if (mode === Mode.LinkTextFromSelection) {
-      linkText = editor.getSelection();
-    }
-    if (mode === Mode.LinkTextFromClipboard) {
-      linkText = await navigator.clipboard.readText();
-    }
-
-    if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
-      // Does the line already have a block ID?
-      const blockID = line.match(blockIDRegex);
-      let link = "";
-      if (blockID === null) {
-        // There is NOT an existing line ID:
-        newID = `^${genID()}`;
-        link = view.app.fileManager.generateMarkdownLink(
-          file,
-          "/",
-          `#${newID}`,
-          linkText
+      if (
+        (lineNumber === minLine || lineNumber === maxLine) &&
+        !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
+      ) {
+        copiedLine = line.slice(
+          lineNumber === minLine ? cursorFrom.ch : 0,
+          lineNumber === maxLine ? cursorTo.ch : line.length - 1
         );
-        line = line.replace(/\s*?$/, ` ${newID}`);
-        if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
-          link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
-          copiedLine =
-            copy === CopyTypes.LinkOnlyEmbed
-              ? link
-              : settings.copiedLinkText.replace("{{LINK}}", link);
-        } else {
-          copiedLine = copiedLine.replace(
-            new RegExp(settings.lineFormatFrom, "u"),
-            settings.lineFormatTo.replace("{{LINK}}", link)
+      }
+
+      if (
+        editor.getLine(lineNumber).match(/^\s*$/) &&
+        !(lineNumber === minLine && minLine === maxLine)
+      ) {
+        copiedLines.push(copiedLine);
+        updatedLines.push(line);
+        continue;
+      }
+
+      let linkText = settings.linkText;
+      console.log(123, Object.values(Mode)[mode]);
+
+      if (mode === Mode.LinkTextFromSelection) {
+        linkText = editor.getRange(selection.anchor, selection.head);
+      }
+      if (mode === Mode.LinkTextFromClipboard) {
+        linkText = await navigator.clipboard.readText();
+      }
+      console.log(130);
+
+      if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
+        // Does the line already have a block ID?
+        const blockID = line.match(blockIDRegex);
+        let link = "";
+        if (blockID === null) {
+          // There is NOT an existing line ID:
+          newID = `^${genID()}`;
+          link = view.app.fileManager.generateMarkdownLink(
+            file,
+            "/",
+            `#${newID}`,
+            linkText
           );
-        }
-      } else {
-        // There IS an existing line ID:
-        link = view.app.fileManager.generateMarkdownLink(
-          file,
-          "/",
-          `#${blockID}`,
-          linkText
-        );
-        if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
-          link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
-          copiedLine =
-            copy === CopyTypes.LinkOnlyEmbed
-              ? link
-              : settings.copiedLinkText.replace("{{LINK}}", link);
-        } else {
-          copiedLine = copiedLine
-            .replace(blockIDRegex, "")
-            .replace(
+          line = line.replace(/\s*?$/, ` ${newID}`);
+          if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
+            link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+            copiedLine =
+              copy === CopyTypes.LinkOnlyEmbed
+                ? link
+                : settings.copiedLinkText.replace("{{LINK}}", link);
+          } else {
+            copiedLine = copiedLine.replace(
               new RegExp(settings.lineFormatFrom, "u"),
               settings.lineFormatTo.replace("{{LINK}}", link)
             );
+          }
+        } else {
+          // There IS an existing line ID:
+          link = view.app.fileManager.generateMarkdownLink(
+            file,
+            "/",
+            `#${blockID}`,
+            linkText
+          );
+          if (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) {
+            link = (copy === CopyTypes.LinkOnlyEmbed ? "!" : "") + link;
+            copiedLine =
+              copy === CopyTypes.LinkOnlyEmbed
+                ? link
+                : settings.copiedLinkText.replace("{{LINK}}", link);
+          } else {
+            copiedLine = copiedLine
+              .replace(blockIDRegex, "")
+              .replace(
+                new RegExp(settings.lineFormatFrom, "u"),
+                settings.lineFormatTo.replace("{{LINK}}", link)
+              );
+          }
         }
       }
+      console.log(182);
+
+      if (
+        !(
+          (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) &&
+          lineNumber !== minLine
+        )
+      ) {
+        copiedLines.push(copiedLine);
+      }
+      updatedLines.push(line);
+      console.log(193);
     }
 
-    if (
-      !(
-        (copy === CopyTypes.LinkOnly || copy === CopyTypes.LinkOnlyEmbed) &&
-        lineNumber !== minLine
-      )
-    ) {
-      copiedLines.push(copiedLine);
-    }
-    updatedLines.push(line);
-  }
+    changes.add({
+      from: { line: minLine, ch: 0 },
+      to: { line: maxLine, ch: editor.getLine(maxLine).length },
+      text: updatedLines.join("\n"),
+    });
+  });
 
   navigator.clipboard.writeText(copiedLines.join("\n")).then(() => {
     if (settings.displayCopiedNotice || false) {
@@ -190,12 +206,13 @@ const copyForwardLines = async (
     }
   });
 
-  transaction.changes?.push({
-    from: { line: minLine, ch: 0 },
-    to: { line: maxLine, ch: editor.getLine(maxLine).length },
-    text: updatedLines.join("\n"),
+  const transaction: EditorTransaction = {
+    changes: Array.from(changes),
+  };
+
+  transaction.selections = selections.map((selection) => {
+    return { from: selection.anchor, to: selection.head };
   });
-  transaction.selection = { from: cursorFrom, to: cursorTo };
   editor.transaction(transaction);
 };
 
