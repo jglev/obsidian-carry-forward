@@ -1,7 +1,6 @@
 import {
   App,
   Editor,
-  EditorChange,
   EditorTransaction,
   MarkdownView,
   Notice,
@@ -71,8 +70,10 @@ const copyForwardLines = async (
   const selections = editor.listSelections();
   console.log(71, selections);
 
+  const transaction: EditorTransaction = {
+    changes: [],
+  };
   const copiedLines: string[] = [];
-  const changes = new Set<EditorChange>();
 
   const file = view.file;
 
@@ -193,11 +194,23 @@ const copyForwardLines = async (
       console.log(193);
     }
 
-    changes.add({
-      from: { line: minLine, ch: 0 },
-      to: { line: maxLine, ch: editor.getLine(maxLine).length },
-      text: updatedLines.join("\n"),
-    });
+    const maxLineLength = editor.getLine(maxLine).length;
+
+    if (
+      transaction.changes.filter(
+        (change) =>
+          change.from.line === minLine &&
+          change.from.ch === 0 &&
+          change.to.line === maxLine &&
+          change.to.ch === maxLineLength
+      ).length === 0
+    ) {
+      transaction.changes?.push({
+        from: { line: minLine, ch: 0 },
+        to: { line: maxLine, ch: maxLineLength },
+        text: updatedLines.join("\n"),
+      });
+    }
   });
 
   navigator.clipboard.writeText(copiedLines.join("\n")).then(() => {
@@ -205,10 +218,6 @@ const copyForwardLines = async (
       new Notice("Copied");
     }
   });
-
-  const transaction: EditorTransaction = {
-    changes: Array.from(changes),
-  };
 
   transaction.selections = selections.map((selection) => {
     return { from: selection.anchor, to: selection.head };
