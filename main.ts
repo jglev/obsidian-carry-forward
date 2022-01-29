@@ -68,7 +68,6 @@ const copyForwardLines = async (
   }
 
   const selections = editor.listSelections();
-  console.log(71, selections);
 
   const transaction: EditorTransaction = {
     changes: [],
@@ -82,12 +81,10 @@ const copyForwardLines = async (
     const cursorTo = selection.head;
     const minLine = Math.min(cursorFrom.line, cursorTo.line);
     const maxLine = Math.max(cursorFrom.line, cursorTo.line);
-    console.log(84, cursorFrom, cursorTo);
 
     const updatedLines: string[] = [];
     let newID = "";
     for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
-      console.log(90);
       let line = editor.getLine(lineNumber);
       let copiedLine = line;
       if (
@@ -120,7 +117,6 @@ const copyForwardLines = async (
       }
 
       let linkText = settings.linkText;
-      console.log(123, Object.values(Mode)[mode]);
 
       if (mode === Mode.LinkTextFromSelection) {
         linkText = editor.getRange(selection.anchor, selection.head);
@@ -128,7 +124,6 @@ const copyForwardLines = async (
       if (mode === Mode.LinkTextFromClipboard) {
         linkText = await navigator.clipboard.readText();
       }
-      console.log(130);
 
       if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
         // Does the line already have a block ID?
@@ -180,7 +175,6 @@ const copyForwardLines = async (
           }
         }
       }
-      console.log(182);
 
       if (
         !(
@@ -191,7 +185,6 @@ const copyForwardLines = async (
         copiedLines.push(copiedLine);
       }
       updatedLines.push(line);
-      console.log(193);
     }
 
     const maxLineLength = editor.getLine(maxLine).length;
