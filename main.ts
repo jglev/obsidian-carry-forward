@@ -75,19 +75,16 @@ const copyForwardLines = async (
   const copiedLines: string[] = [];
 
   const file = view.file;
-  console.log(78);
 
   for (const selection of selections) {
     const cursorFrom = selection.anchor;
     const cursorTo = selection.head;
     const minLine = Math.min(cursorFrom.line, cursorTo.line);
     const maxLine = Math.max(cursorFrom.line, cursorTo.line);
-    console.log(84);
 
     const updatedLines: string[] = [];
     let newID = "";
     for (let lineNumber = minLine; lineNumber <= maxLine; lineNumber++) {
-      console.log(88);
       let line = editor.getLine(lineNumber);
       let copiedLine = line;
       if (
@@ -114,7 +111,6 @@ const copyForwardLines = async (
         editor.getLine(lineNumber).match(/^\s*$/) &&
         !(lineNumber === minLine && minLine === maxLine)
       ) {
-        console.log(114);
         copiedLines.push(copiedLine);
         updatedLines.push(line);
         continue;
@@ -186,7 +182,6 @@ const copyForwardLines = async (
           lineNumber !== minLine
         )
       ) {
-        console.log(186);
         copiedLines.push(copiedLine);
       }
       updatedLines.push(line);
@@ -211,12 +206,9 @@ const copyForwardLines = async (
         text: updatedLines.join("\n"),
       });
     }
-  });
-
-  console.log(211, copiedLines.join("\n"));
+  }
 
   await navigator.clipboard.writeText(copiedLines.join("\n"));
-  console.log(214, await navigator.clipboard.readText());
   if (settings.displayCopiedNotice || false) {
     new Notice("Copied");
   }
