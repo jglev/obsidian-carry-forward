@@ -146,7 +146,6 @@ const copyForwardLines = async (
             newChangeBlockIDs[0].text.match(blockIDRegex)
           );
         }
-        console.log(147, newChangeBlockIDs, newChangeBlockID, blockID);
 
         if (blockID === null && newChangeBlockID === null) {
           // There is NOT an existing line ID:
