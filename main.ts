@@ -81,6 +81,7 @@ const copyForwardLines = async (
     const cursorTo = selection.head;
     const minLine = Math.min(cursorFrom.line, cursorTo.line);
     const maxLine = Math.max(cursorFrom.line, cursorTo.line);
+    const maxLineLength = editor.getLine(maxLine).length;
 
     const updatedLines: string[] = [];
     let newID = "";
@@ -127,9 +128,27 @@ const copyForwardLines = async (
 
       if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
         // Does the line already have a block ID?
-        const blockID = line.match(blockIDRegex);
+        const blockIDMatch = line.match(blockIDRegex);
+        let blockID =
+          blockIDMatch === null ? blockIDMatch : String(blockIDMatch);
         let link = "";
-        if (blockID === null) {
+        const newChangeBlockIDs = transaction.changes?.filter(
+          (change) =>
+            change.from.line === minLine &&
+            change.from.ch === 0 &&
+            change.to.line === maxLine &&
+            change.to.ch === maxLineLength
+        );
+        let newChangeBlockID = null;
+
+        if (newChangeBlockIDs.length > 0) {
+          newChangeBlockID = String(
+            newChangeBlockIDs[0].text.match(blockIDRegex)
+          );
+        }
+        console.log(147, newChangeBlockIDs, newChangeBlockID, blockID);
+
+        if (blockID === null && newChangeBlockID === null) {
           // There is NOT an existing line ID:
           newID = `^${genID()}`;
           link = view.app.fileManager.generateMarkdownLink(
@@ -153,6 +172,9 @@ const copyForwardLines = async (
           }
         } else {
           // There IS an existing line ID:
+          if (blockID === null) {
+            blockID = newChangeBlockID;
+          }
           link = view.app.fileManager.generateMarkdownLink(
             file,
             "/",
@@ -186,8 +208,6 @@ const copyForwardLines = async (
       }
       updatedLines.push(line);
     }
-
-    const maxLineLength = editor.getLine(maxLine).length;
 
     if (
       // Avoid setting repeat changes (e.g., from multiple cursors on the same
