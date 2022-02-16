@@ -98,15 +98,16 @@ const copyForwardLines = async (
         copiedLine = copiedLine.replace(/^\s*/, "");
       }
 
-      // if (
-      //   (lineNumber === minLine || lineNumber === maxLine) &&
-      //   !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
-      // ) {
-      copiedLine = line.slice(
-        lineNumber === minLine ? cursorFrom.ch : 0,
-        lineNumber === maxLine ? cursorTo.ch : line.length - 1
-      );
-      // }
+      if (
+        selections.length > 1 &&
+        (lineNumber === minLine || lineNumber === maxLine) &&
+        !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
+      ) {
+        copiedLine = line.slice(
+          lineNumber === minLine ? cursorFrom.ch : 0,
+          lineNumber === maxLine ? cursorTo.ch : line.length - 1
+        );
+      }
 
       if (
         editor.getLine(lineNumber).match(/^\s*$/) &&
