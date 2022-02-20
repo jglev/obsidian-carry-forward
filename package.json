@@ -1,23 +1,31 @@
 {
-  "name": "obsidian-carry-forward",
-  "version": "1.4.1",
-  "description": "An Obsidian Notes plugin for generating and copying block IDs, and copying lines with a link to the copied line.",
-  "main": "main.js",
-  "scripts": {
-    "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js --environment BUILD:production"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^18.0.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "@rollup/plugin-typescript": "^8.2.1",
-    "@types/node": "^14.14.37",
-    "obsidian": "^0.12.0",
-    "rollup": "^2.32.1",
-    "tslib": "^2.2.0",
-    "typescript": "^4.2.4"
-  }
+    "name": "obsidian-carry-forward",
+    "version": "1.4.1",
+    "description": "An Obsidian Notes plugin for generating and copying block IDs, and copying lines with a link to the copied line.",
+    "main": "main.js",
+    "scripts": {
+        "dev": "rollup --config rollup.config.js -w",
+        "build": "rollup --config rollup.config.js --environment BUILD:production",
+        "wdio": "wdio run wdio.conf.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^18.0.0",
+        "@rollup/plugin-node-resolve": "^11.2.1",
+        "@rollup/plugin-typescript": "^8.2.1",
+        "@types/node": "^14.14.37",
+        "@wdio/cli": "^7.16.15",
+        "@wdio/local-runner": "^7.16.15",
+        "@wdio/mocha-framework": "^7.16.15",
+        "@wdio/selenium-standalone-service": "^7.16.14",
+        "@wdio/spec-reporter": "^7.16.14",
+        "chromedriver": "^98.0.1",
+        "obsidian": "^0.12.0",
+        "rollup": "^2.32.1",
+        "tslib": "^2.2.0",
+        "typescript": "^4.2.4",
+        "wdio-chromedriver-service": "^7.2.8"
+    }
 }
