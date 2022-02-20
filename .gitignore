@@ -12,3 +12,6 @@ main.js
 
 # obsidian
 data.json
+
+# tests
+test/empty_vault
