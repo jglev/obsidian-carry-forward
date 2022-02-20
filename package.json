@@ -10,7 +10,7 @@
         "test": "yarn run build && mkdir -p test/empty_vault/.obsidian/plugins/sample-plugin && cp manifest.json styles.css main.js test/empty_vault/.obsidian/plugins/sample-plugin && npx wdio run wdio.conf.js"
     },
     "keywords": [],
-    "author": "",
+    "author": "Jacob Levernier",
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^14.14.37",
