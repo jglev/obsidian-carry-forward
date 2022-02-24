@@ -28,9 +28,17 @@ describe("Plugin", function () {
             "app.plugins.setEnable(true);app.plugins.enablePlugin('obsidian-carry-forward')"
         );
 
-        // Dismiss warning model and exit settings:
+        // Dismiss warning model:
         await browser.$(".modal-button-container button:last-child").click();
         await sleep(0.5);
+
+        // Change the default settings text:
+        await (await browser.$$('.vertical-tab-header-group')[1]).$('.vertical-tab-nav-item').click();
+        await browser.$('.setting-item-control').click();
+        await browser.keys('here');
+        await sleep(1);
+
+        // Exit settings:
         await browser.$(".modal-close-button").click();
     })
 
@@ -102,5 +110,6 @@ describe("Plugin", function () {
         const pastedTextSplit = pastedText.split(/\r?\n/);
 
         assert(pastedTextSplit[0 + 1].startsWith(testTextSplit[0]), `Line 0 ("${testTextSplit[0]}") is not the same ("${pastedTextSplit[0 + 1]}")`);
+        assert(pastedTextSplit[0 + 1].endsWith('|here]])'), `Line 0 ("${pastedTextSplit[0 + 1]}") does not end with "|here]])")`);
     });
 });
