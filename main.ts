@@ -249,6 +249,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines",
+      icon: "pin",
       name: "Copy selection with each line linked to its copied source (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -262,6 +263,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines",
+      icon: "pin",
       name: "Copy selection with first line linked to its copied source (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -275,6 +277,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only",
+      icon: "pin",
       name: "Copy link to line (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -288,6 +291,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-embed-link-only",
+      icon: "pin",
       name: "Copy embed link to line (default link text)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -301,6 +305,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines-selection",
+      icon: "pin",
       name: "Copy selection with each line linked to its copied source (link text from selection)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -315,6 +320,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines-selection",
+      icon: "pin",
       name: "Copy selection with first line linked to its copied source (link text from selection)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -329,6 +335,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only-selection",
+      icon: "pin",
       name: "Copy link to line (link text from selection)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -343,6 +350,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-embed-link-only-selection",
+      icon: "pin",
       name: "Copy embed link to line (link text from selection)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -357,6 +365,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-separate-lines-clipboard",
+      icon: "pin",
       name: "Copy selection with each line linked to its copied source (link text from clipboard)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -371,6 +380,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-combined-lines-clipboard",
+      icon: "pin",
       name: "Copy selection with first line linked to its copied source (link text from clipboard)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -385,6 +395,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-link-only-clipboard",
+      icon: "pin",
       name: "Copy link to line (link text from clipboard)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
@@ -399,6 +410,7 @@ export default class CarryForwardPlugin extends Plugin {
 
     this.addCommand({
       id: "carry-line-forward-embed-link-only-clipboard",
+      icon: "pin",
       name: "Copy embed link to line (link text from clipboard)",
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         return await copyForwardLines(
