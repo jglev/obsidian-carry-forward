@@ -49,7 +49,11 @@ enum Mode {
   LinkTextFromClipboard,
 }
 
-const blockIDRegex = /(?<=[\s^])\^[a-zA-Z0-9-]+$/u;
+// This was previously `/(?<=[\s^])\^[a-zA-Z0-9-]+$/u`.
+// However, iOS apparently does not support negative lookbehind, and so
+// would not successfully load the plugin.
+// Thus, this regex was re-written not to use negative lookbehind.
+const blockIDRegex = /(?:^| +)(?<blockID>\^[a-zA-Z0-9-]+)$/u;
 
 const copyForwardLines = async (
   editor: Editor,
@@ -129,9 +133,9 @@ const copyForwardLines = async (
 
       if (copy === CopyTypes.SeparateLines || lineNumber === minLine) {
         // Does the line already have a block ID?
-        const blockIDMatch = line.match(blockIDRegex);
+        const blockIDMatch = line.match(blockIDRegex)?.groups.blockID;
         let blockID =
-          blockIDMatch === null ? blockIDMatch : String(blockIDMatch);
+          blockIDMatch === undefined ? null : String(blockIDMatch);
         let link = "";
         const newChangeBlockIDs = transaction.changes?.filter(
           (change) =>
@@ -144,7 +148,7 @@ const copyForwardLines = async (
 
         if (newChangeBlockIDs.length > 0) {
           newChangeBlockID = String(
-            newChangeBlockIDs[0].text.match(blockIDRegex)
+            newChangeBlockIDs[0].text.match(blockIDRegex)?.groups.blockID
           );
         }
 
