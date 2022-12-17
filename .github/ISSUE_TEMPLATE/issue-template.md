@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Issue tracker is **ONLY** used for reporting bugs. New feature ideas should be discussed in the [ideas section](https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/ideas). Please use the [Q&A section](https://github.com/publicus/obsidian-apply-patterns-plugin/discussions/categories/q-a) for supporting issues. Please use the search function.
+Issue tracker is **ONLY** used for reporting bugs. New feature ideas should be discussed in the [ideas section](https://github.com/jglev/obsidian-apply-patterns-plugin/discussions/categories/ideas). Please use the [Q&A section](https://github.com/jglev/obsidian-apply-patterns-plugin/discussions/categories/q-a) for supporting issues. Please use the search function.
 
 If you encountered the issue after you installed, updated, or reloaded the Carry Forward plugin, please try restarting obsidian before reporting the bug.
 

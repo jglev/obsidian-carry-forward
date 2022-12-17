@@ -1,7 +1,7 @@
 {
   "id": "obsidian-carry-forward",
   "name": "Carry-Forward",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "minAppVersion": "0.14.5",
   "description": "An Obsidian Notes plugin for generating and copying block IDs and for copying lines with links to the copied line.",
   "author": "Jacob Levernier",
