@@ -103,7 +103,7 @@ const copyForwardLines = async (
       }
 
       if (
-        selections.length > 1 &&
+        selections.length > 0 &&
         (lineNumber === minLine || lineNumber === maxLine) &&
         !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
       ) {
