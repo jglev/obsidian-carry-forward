@@ -102,14 +102,22 @@ const copyForwardLines = async (
         copiedLine = copiedLine.replace(/^\s*/, "");
       }
 
+
       if (
-        selections.length > 0 &&
-        (lineNumber === minLine || lineNumber === maxLine) &&
-        !(minLine === maxLine && cursorFrom.ch === cursorTo.ch)
+        (
+          selections.length > 1 && (
+            lineNumber === minLine || lineNumber === maxLine
+          ) && !(
+            minLine === maxLine && cursorFrom.ch === cursorTo.ch
+          )
+        ) || (
+          (selections.length === 1) &&
+          minLine === maxLine && cursorFrom.ch !== cursorTo.ch
+        )
       ) {
         copiedLine = line.slice(
-          lineNumber === minLine ? cursorFrom.ch : 0,
-          lineNumber === maxLine ? cursorTo.ch : line.length - 1
+          lineNumber === minLine ? Math.min(cursorFrom.ch, cursorTo.ch) : 0,
+          lineNumber === maxLine ? Math.max(cursorFrom.ch, cursorTo.ch) : line.length - 1
         );
       }
 
